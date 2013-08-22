@@ -169,7 +169,8 @@ instance Arbitrary Player where
 instance Arbitrary InPlayBoard where
   arbitrary = do
     pstart <- arbitrary
-    fc_bds 6 (start pstart)
+    n <- choose (1,7)
+    fc_bds n (n::Int) (start pstart)
 
 -- X - 1
 -- 6
@@ -185,9 +186,13 @@ instance Arbitrary InPlayBoard where
 -- 1
 -- X - 7
 -- 0
-fc_bds 0 b = return b
-fc_bds n b = do ps <- arbitrary
-                case move ps b of
-                  Left _ -> fc_bds n b
-                  Right (FB _) -> fc_bds n b 
-                  Right (IB b') -> fc_bds (n-1) b'
+fc_bds _ 0 b = return b
+fc_bds no n b = do 
+                  ps <- arbitrary
+                  case move ps b of
+                    Left _          -> fc_bds no n b
+                    Right x@(FB _)  -> fc_bds no no (start ps) 
+                    Right (IB b')   -> fc_bds no (n-1) b'
+
+
+-- Right x@(FB _) -> ("Finished - count: " ++ show n ++ "\n Board: \n " ++ pprint x) `trace` fc_bds no no (start ps) 
